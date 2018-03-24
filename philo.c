@@ -1,3 +1,13 @@
+/*
+   John Karasev
+   CS 360 Systems Programming
+   WSUV Spring 2018
+   -----------------------------------------------------
+   Assignment #7:
+   Simulate philosphers diner using threads.
+*/
+
+
 #define _POSIX_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,18 +35,20 @@ typedef struct infoPhil {
 	bool isAlive;
 } pinfo;
 
+// will be passed to the 5 threads
 static int t_id[5];
 
-static pinfo threadPhil[5];
+static pinfo threadPhil[5]; // will be used in the 5 threads to keep track of info
 
-static pthread_mutex_t chopsticks[5];
+static pthread_mutex_t chopsticks[5]; // chopstick mutex
 
 //prints results from the philosphers diner at the end
 void printinfo() {
 	printf( "\n\n" );
 	for ( int i = 0; i < 5; i++ )
-		printf( "philospher %d thinktime=%d eattime=%d cycles=%d pid=%d\n",
-		        threadPhil[i].id,  threadPhil[i].thinktime, threadPhil[i].eattime, threadPhil[i].cycles, threadPhil[i].id );
+		printf( "philospher %d thinktime=%d eattime=%d cycles=%d\n",
+		        threadPhil[i].id,  threadPhil[i].thinktime, threadPhil[i].eattime, threadPhil[i].cycles );
+	printf("\n");
 }
 
 int randomGaussian_r(int mean, int stddev, unsigned int* state) {
@@ -52,9 +64,9 @@ int randomGaussian_r(int mean, int stddev, unsigned int* state) {
 
 void lifeOfPi( void* ptr ) {
 
-		unsigned int id = *( (unsigned int *)ptr );
+		unsigned int id = *( (unsigned int *)ptr ); //cast back to int* to find philosher id
 
-		pinfo *info = &threadPhil[id];
+		pinfo *info = &threadPhil[id]; //get the struct that is associated with the philospher id
 
 		info->id = id;
 
@@ -81,7 +93,7 @@ void lifeOfPi( void* ptr ) {
 					exit( 1 );
 				}
 				pthread_mutex_unlock( &chopsticks[info->chopsticks[0]] );
-				sleep(1);
+				sleep(1); // wait for 1 sec to avoid busy loops.
 			}
 
 
@@ -102,31 +114,28 @@ void lifeOfPi( void* ptr ) {
 			sleep( thinkTime );
 
 		}
-		// after philosher has eat for 100 seconds, he gets killed.
-		printf( "philospher %d is dead (process %d)\n", info->id, info->id );
+		// after philosher has eaten for 100 seconds, he gets killed.
+		printf( "philospher %d is dead\n", info->id );
 
 		return;
 }
 
 int main () {
 
-	pthread_t threads[5];
+	pthread_t threads[5]; // allocate threads for 5 philosphers
 
-	for ( int i = 0; i < 5; i++ )
+	for ( int i = 0; i < 5; i++ ) // initialize the mutex (chopsticks)
 		pthread_mutex_init( &chopsticks[i], NULL );
 
-	for ( int i = 0; i < 5; i++ ) {
+	for ( int i = 0; i < 5; i++ ) { // set id to the pointer that will be passed and create threads
 		t_id[i] = i;
 		pthread_create( &threads[i], NULL, ( void* ) lifeOfPi, &t_id[i] );
 	}
 
-	for ( int i = 0; i < 5; i++ )
+	for ( int i = 0; i < 5; i++ )  // start the threads
 		pthread_join( threads[i], NULL);
 
-	for ( int i = 0; i < 5; i++ )
-		pthread_join( threads[i], NULL );
-
-	printinfo();
+	printinfo(); // print philosphers info
 
 	return 0;
 }
