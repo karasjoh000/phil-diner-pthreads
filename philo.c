@@ -64,60 +64,60 @@ int randomGaussian_r(int mean, int stddev, unsigned int* state) {
 
 void lifeOfPi( void* ptr ) {
 
-		unsigned int id = *( (unsigned int *)ptr ); //cast back to int* to find philosher id
+	unsigned int id = *( (unsigned int *)ptr ); //cast back to int* to find philosher id
 
-		pinfo *info = &threadPhil[id]; //get the struct that is associated with the philospher id
+	pinfo *info = &threadPhil[id]; //get the struct that is associated with the philospher id
 
-		info->id = id;
+	info->id = id;
 
-		id++; //for seed on gaussian (cannot be 0 so increment by 1 to avoid that )
+	id++; //for seed on gaussian (cannot be 0 so increment by 1 to avoid that )
 
 
-		//assign the correct chopsticks to each philospher.
-		info->chopsticks[0] = ( info->id + 4 ) % 5,
-		info->chopsticks[1] = info->id;
+	//assign the correct chopsticks to each philospher.
+	info->chopsticks[0] = ( info->id + 4 ) % 5,
+	info->chopsticks[1] = info->id;
 
-		//loop until philospher ate for 100 seconds.
-		for ( info->eattime = info->thinktime = info->cycles =  0; info->eattime < 100; info->cycles++ ) {
-			int eatTime;
-			int thinkTime;
+	//loop until philospher ate for 100 seconds.
+	for ( info->eattime = info->thinktime = info->cycles =  0; info->eattime < 100; info->cycles++ ) {
+		int eatTime;
+		int thinkTime;
 
-			// wait for the two chopsticks.
-			//try to get the two chopsticks at the same time otherwise wait and try again.
-			while( true ) {
-				pthread_mutex_lock( &chopsticks[info->chopsticks[0]] );
-				int result = pthread_mutex_trylock( &chopsticks[info->chopsticks[1]] );
-				if ( result == 0 ) break;
-				if ( result != EBUSY ) {
-					fprintf( stderr, "Error on trylock \n");
-					exit( 1 );
-				}
-				pthread_mutex_unlock( &chopsticks[info->chopsticks[0]] );
-				sleep(1); // wait for 1 sec to avoid busy loops.
+		// wait for the two chopsticks.
+		//try to get the two chopsticks at the same time otherwise wait and try again.
+		while( true ) {
+			pthread_mutex_lock( &chopsticks[info->chopsticks[0]] );
+			int result = pthread_mutex_trylock( &chopsticks[info->chopsticks[1]] );
+			if ( result == 0 ) break;
+			if ( result != EBUSY ) {
+				fprintf( stderr, "Error on trylock \n");
+				exit( 1 );
 			}
-
-
-			// get randomGaussian number for eating.
-			eatTime = abs( randomGaussian_r(  MEAN_EAT, STDDEV_EAT, &id ) );
-			printf( "philID: %d eattime: %d, (total eat:%d)\n", info->id, eatTime, info->eattime );
-			sleep( eatTime );
-			info->eattime += eatTime;
-
-			//put chopsticks back on the table.
 			pthread_mutex_unlock( &chopsticks[info->chopsticks[0]] );
-			pthread_mutex_unlock( &chopsticks[info->chopsticks[1]] );
-
-			// After philospher is satisfied, he thinks for a random time.
-			thinkTime = abs( randomGaussian_r( MEAN_THNK, STDDEV_THNK, &id ) );
-			printf( "philID: %d thinktime: %d (total think: %d)\n", info->id, thinkTime, info->thinktime );
-			info->thinktime += thinkTime;
-			sleep( thinkTime );
-
+			sleep(1); // wait for 1 sec to avoid busy loops.
 		}
-		// after philosher has eaten for 100 seconds, he gets killed.
-		printf( "philospher %d is dead\n", info->id );
 
-		return;
+
+		// get randomGaussian number for eating.
+		eatTime = abs( randomGaussian_r(  MEAN_EAT, STDDEV_EAT, &id ) );
+		printf( "philID: %d eattime: %d, (total eat:%d)\n", info->id, eatTime, info->eattime );
+		sleep( eatTime );
+		info->eattime += eatTime;
+
+		//put chopsticks back on the table.
+		pthread_mutex_unlock( &chopsticks[info->chopsticks[0]] );
+		pthread_mutex_unlock( &chopsticks[info->chopsticks[1]] );
+
+		// After philospher is satisfied, he thinks for a random time.
+		thinkTime = abs( randomGaussian_r( MEAN_THNK, STDDEV_THNK, &id ) );
+		printf( "philID: %d thinktime: %d (total think: %d)\n", info->id, thinkTime, info->thinktime );
+		info->thinktime += thinkTime;
+		sleep( thinkTime );
+
+	}
+	// after philosher has eaten for 100 seconds, he gets killed.
+	printf( "philospher %d is dead\n", info->id );
+
+	return;
 }
 
 int main () {
