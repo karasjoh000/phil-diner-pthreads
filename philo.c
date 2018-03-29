@@ -132,7 +132,7 @@ int main () {
 		pthread_create( &threads[i], NULL, ( void* ) lifeOfPi, &t_id[i] );
 	}
 
-	for ( int i = 0; i < 5; i++ )  // start the threads
+	for ( int i = 0; i < 5; i++ )  // wait for threads to finish
 		pthread_join( threads[i], NULL);
 
 	printinfo(); // print philosphers info
