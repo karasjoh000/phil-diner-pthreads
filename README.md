@@ -1,1 +1,1 @@
-# Philosphers Diner with pthreads on unix 
+# Philosophers Diner with pthreads on unix 
